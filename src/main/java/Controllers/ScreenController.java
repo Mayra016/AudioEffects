@@ -10,6 +10,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.JarURLConnection;
 import java.net.URL;
@@ -32,6 +33,7 @@ public class ScreenController extends JFrame implements LineListener {
 	private Thread playerThread;
 	private AdvancedPlayer player;
 	boolean isJar = false;
+	private InputStream inputStream;
 	
 	public ScreenController() {
 		// Initial window configuration
@@ -173,7 +175,7 @@ public class ScreenController extends JFrame implements LineListener {
 	
 	private void playSound(String soundSource) {
 		try {
-			InputStream inputStream; 
+			
 			
 			if (isJar) {
 				inputStream = getClass().getResourceAsStream("/" + soundSource);
@@ -193,6 +195,22 @@ public class ScreenController extends JFrame implements LineListener {
                         e.printStackTrace();
                     } finally {
                         STOP.setEnabled(false);
+            		    try {
+            		        if (inputStream != null) {
+            		            inputStream.close();
+            		        }
+            		    } catch (IOException e) {
+            		        e.printStackTrace();
+            		    }
+            		    
+            		    if (player != null) {
+            		        player.close();
+            		    }
+            		    
+            		    if (playerThread != null && playerThread.isAlive()) {
+            		        playerThread.stop();
+            		    }
+            		    STOP.setEnabled(false);
                     }
                 }
             });
