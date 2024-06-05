@@ -225,6 +225,14 @@ public class ScreenController extends JFrame implements LineListener {
         	player.close();
         	playerThread.stop();
         }
+        if (inputStream != null) {
+            try {
+				inputStream.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        }
     }
 
 	@Override
