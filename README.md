@@ -24,4 +24,8 @@ A simple and lightweight program to play sound effects on streams
        java -jar AudioEffect.jar
        ``` <br>
        ** AudioEffect must be replaced with the name of the .jar file that you have exported in your IDE. <br>
-   3.3 To close the program, just press alt + f4 on the window or close your terminal. <br>
+   3.3 To close the program, just press alt + f4 on the window or close your terminal. <br><br><br>
+
+<h1>App specifications</h1> <br> <br>
+Required disk space: 10,9 mb + the size of the audio effects you want to add.<br>
+RAM consum: 40 - 90 mb
