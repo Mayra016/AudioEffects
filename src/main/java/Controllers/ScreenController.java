@@ -2,7 +2,6 @@ package main.java.Controllers;
 
 import java.awt.Color;
 import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Image;
@@ -12,33 +11,27 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.net.JarURLConnection;
 import java.net.URL;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
-import javax.print.attribute.standard.Media;
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
-import javax.sound.sampled.DataLine;
-import javax.sound.sampled.LineEvent;
-import javax.sound.sampled.LineListener;
-import javax.sound.sampled.SourceDataLine;
 import javax.swing.*;
 
 import javax.sound.sampled.*;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
-import javazoom.jl.decoder.JavaLayerException;
+
 import javazoom.jl.player.advanced.AdvancedPlayer;
-import main.java.Models.AudioListener;
+
 
 @SuppressWarnings("serial")
 public class ScreenController extends JFrame implements LineListener {
 	private JButton STOP;
 	private Thread playerThread;
 	private AdvancedPlayer player;
+	boolean isJar = false;
 	
 	public ScreenController() {
 		// Initial window configuration
@@ -61,8 +54,8 @@ public class ScreenController extends JFrame implements LineListener {
         int maxButtonsPerRow = 8;
 
 	    
-	    Map<String, String> soundFiles = listFiles("/main/resources/sounds");
-        Map<String, String> imageFiles = listFiles("/main/resources/images");
+	    Map<String, String> soundFiles = listFiles("/main/resources/sounds/");
+        Map<String, String> imageFiles = listFiles("/main/resources/images/");
 
 	    
         // Create each soud effect button
@@ -108,18 +101,35 @@ public class ScreenController extends JFrame implements LineListener {
 
 	// Iterate over the audio effect and image folder to load the media content
 	private Map<String, String> listFiles(String dirPath) {
-	    Map<String, String> filesMap = new HashMap<>();
+        Map<String, String> filesMap = new HashMap<>();
         try {
             URL resource = getClass().getResource(dirPath);
-            File directory = new File(resource.toURI());
-            File[] files = directory.listFiles();
-            
-            if (files != null) {
-                for (File file : files) {
-                    if (file.isFile()) {
-                        String fileName = file.getName();
-                        String baseName = fileName.substring(0, fileName.lastIndexOf('.'));
-                        filesMap.put(baseName, file.getPath());
+            if (resource != null) {
+                if (resource.getProtocol().equals("jar")) {
+                	isJar = true;
+                    JarURLConnection jarConnection = (JarURLConnection) resource.openConnection();
+                    JarFile jarFile = jarConnection.getJarFile();
+                    Enumeration<JarEntry> entries = jarFile.entries();
+                    while (entries.hasMoreElements()) {
+                        JarEntry entry = entries.nextElement();
+                        String entryName = entry.getName();
+                        if (entryName.startsWith(dirPath.substring(1)) && !entry.isDirectory()) {
+                            String fileName = entryName.substring(entryName.lastIndexOf('/') + 1);
+                            String baseName = fileName.substring(0, fileName.lastIndexOf('.'));
+                            filesMap.put(baseName, entryName);
+                        }
+                    }
+                } else {
+                    File directory = new File(resource.toURI());
+                    File[] files = directory.listFiles();
+                    if (files != null) {
+                        for (File file : files) {
+                            if (file.isFile()) {
+                                String fileName = file.getName();
+                                String baseName = fileName.substring(0, fileName.lastIndexOf('.'));
+                                filesMap.put(baseName, file.getPath());
+                            }
+                        }
                     }
                 }
             }
@@ -138,6 +148,7 @@ public class ScreenController extends JFrame implements LineListener {
 				
 		try {
 			if (imgSource != null) {
+				
 				 ImageIcon originalIcon = new ImageIcon(imgSource);
 		         Image scaledImage = originalIcon.getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH);
 		         ImageIcon scaledIcon = new ImageIcon(scaledImage);
@@ -162,9 +173,14 @@ public class ScreenController extends JFrame implements LineListener {
 	
 	private void playSound(String soundSource) {
 		try {
-			String[] source = soundSource.split("bin");
+			InputStream inputStream; 
 			
-			InputStream inputStream = new FileInputStream(soundSource);
+			if (isJar) {
+				inputStream = getClass().getResourceAsStream("/" + soundSource);
+			} else {
+				inputStream = new FileInputStream(soundSource);
+			}
+			
             
 			player = new AdvancedPlayer(inputStream);
 			STOP.setEnabled(true);
